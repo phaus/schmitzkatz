@@ -4,7 +4,9 @@
 		<title>mactun.es</title>
 
 		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<!--[if IE]>
+			<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<![endif]-->
 
         <meta name="HandheldFriendly" content="true" />
         <meta name="viewport" content="
@@ -23,10 +25,10 @@
 
 		<link rel="icon" href="media/favicon.ico" type="image/x-icon">
 
-		<link rel="apple-touch-icon" href="media/touch-icon-iphone.png" />
-		<link rel="apple-touch-icon" sizes="72x72" href="media/touch-icon-ipad.png" />
-		<link rel="apple-touch-icon" sizes="114x114" href="media/touch-icon-iphone-retina.png" />
-		<link rel="apple-touch-icon" sizes="144x144" href="media/touch-icon-ipad-retina.png" />
+		<link rel="apple-touch-icon-precomposed" href="media/touch-icon-iphone.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="72x72" href="media/touch-icon-ipad.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="114x114" href="media/touch-icon-iphone-retina.png" />
+		<link rel="apple-touch-icon-precomposed" sizes="144x144" href="media/touch-icon-ipad-retina.png" />
 	</head>
 	<body>
 		<div id="container">
@@ -53,7 +55,7 @@
 							<h1><a href="${post.link}">${post.title}</a></h1>
 							<span>${post.date?string("yyyy-MM-dd")}</span>
 						</header>
-						<section id="post-text">
+						<section class="post-text">
 							${post.summary}
 							<p>
 								<a href="${post.link}">Read on...</a>

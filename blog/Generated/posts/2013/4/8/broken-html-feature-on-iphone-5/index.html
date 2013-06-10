@@ -52,16 +52,26 @@
 			<section>
 				<article>
 					<header>
-						<h1>${post.title}</h1>
-						<span>${post.date?string("yyyy-MM-dd")}</span>
+						<h1>Broken HTML feature on iPhone 5</h1>
+						<span>2013-04-08</span>
 					</header>
-					<a href="https://twitter.com/share" class="twitter-share-button" data-lang="en" data-text="${post.title}">Tweet</a>
+					<a href="https://twitter.com/share" class="twitter-share-button" data-lang="en" data-text="Broken HTML feature on iPhone 5">Tweet</a>
 					<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 					<section class="summary-text">
-						${post.summary}
+						When the iPhone came out it wasn't only its awesome browser that made it perfect for browsing the web on the go. Apple also added a lot of neat stuff to iOS and webkit to make webapps look cooler. Apparently Apple broke one of them with the iPhone 5.
 					</section>
 					<section class="post-text">
-						${post.textAsHTML}
+						<p>Tonight I was going to add some cool features to this website that would make browsing it more pleasant. I added some touch icons that would appear on ones iPhone homescreen and wanted to make it standalone when by using</p>
+
+<pre><code>&lt;meta name="apple-mobile-web-app-capable" content="yes" /&gt;
+</code></pre>
+
+<p>when I discovered that standalone apps appear in the 3.7 inch version only. I am not sure if this is a bug or a feature. Anyways I switched, because I didn't like how it looked:</p>
+
+<p><img src="media/ios_broken.png" alt="Standalone Webapp on an iPhone 5" /></p>
+
+<p>You can read more about configuring your webapps for iPhone in the <a href="http://developer.apple.com/library/ios/#documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html">Safari Web Content Guide</a>.</p>
+
 					</section>
 				</article>
 			</section>

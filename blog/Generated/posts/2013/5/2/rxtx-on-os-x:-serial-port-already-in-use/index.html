@@ -52,16 +52,23 @@
 			<section>
 				<article>
 					<header>
-						<h1>${post.title}</h1>
-						<span>${post.date?string("yyyy-MM-dd")}</span>
+						<h1>RXTX on OS X: Serial port already in use</h1>
+						<span>2013-05-02</span>
 					</header>
-					<a href="https://twitter.com/share" class="twitter-share-button" data-lang="en" data-text="${post.title}">Tweet</a>
+					<a href="https://twitter.com/share" class="twitter-share-button" data-lang="en" data-text="RXTX on OS X: Serial port already in use">Tweet</a>
 					<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 					<section class="summary-text">
-						${post.summary}
+						After starting my Java app I got a message that the serial port I was trying to connect to was already in use. The problem turned out to be a completely different thing.
 					</section>
 					<section class="post-text">
-						${post.textAsHTML}
+						<p>When I first got this message I was looking for the issue in my code. After 15 minutes of making sure this was not the case I searched the web and quickly found an answer. If you ever run into this issue make sure that a directory called /var/lock exists and that it has proper permissions set.</p>
+
+<pre><code>sudo mkdir /var/lock
+sudo chmod a+rw /var/lock
+</code></pre>
+
+<p>I found the solution on <a href="http://stackoverflow.com/questions/12866572/rxtx-on-mac-serial-port-already-in-use">Stackoverflow: RXTX on Mac - Serial port already in use</a>.</p>
+
 					</section>
 				</article>
 			</section>
