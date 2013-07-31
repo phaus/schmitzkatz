@@ -10,9 +10,7 @@ import freemarker.template.Template;
 import freemarker.template.DefaultObjectWrapper;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Collections;
 import java.util.List;
@@ -20,193 +18,153 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 
+public class BlogGenerator implements Generator {
 
+    private static final String KEY_POSTS = "blogposts";
+    private static final String KEY_POST = "post";
+    private static final String KEY_MAIN_BLOG_PAGE_TEMPLATE = "index.ftl"; // TODO get from props
+    private static final String KEY_BLOG_POST_TEMPLATE = "blog-post.ftl"; // TODO get from props
+    private static final String BLOG_MAIN_HTML_FILENAME = "index.html"; // TODO get from props
+    private BlogProperties properties;
+    private Configuration configuration;
 
-public class BlogGenerator {
+    public BlogGenerator(BlogProperties properties) {
+        this.properties = properties;
+        initializeTemplateEngine();
+    }
 
-	private static final String KEY_POSTS = "blogposts";
-	private static final String KEY_POST = "post";
-	private static final String KEY_MAIN_BLOG_PAGE_TEMPLATE = "index.ftl"; // TODO get from props
-	private static final String KEY_BLOG_POST_TEMPLATE = "blog-post.ftl"; // TODO get from props
-	private static final String BLOG_MAIN_HTML_FILENAME = "index.html"; // TODO get from props
-	private static final String DS_STORE = ".DS_Store";
-	
+    private void initializeTemplateEngine() {
+        configuration = new Configuration();
+        try {
+            configuration.setDirectoryForTemplateLoading(new File(BlogPost.TEMPLATES_PATH));
+            configuration.setObjectWrapper(new DefaultObjectWrapper());
+        } catch (IOException ioe) {
+            System.out.println("Error: Could not load template configuration.");
+        }
+    }
 
-	private BlogProperties properties;
-	private Configuration configuration;
+    public void generate() {
+        try { // clean generated directory
+            FileUtils.cleanDirectory(new File(BlogPost.GENERATED_PATH));
+        } catch (IOException ioe) {
+            System.out.println("Error: could not clean the Generated-directory.");
+        }
 
+        List<BlogPost> posts = new LinkedList<BlogPost>();
+        String[] postDirectories = Blog.fetchCurrentBlogPostDirectories();
 
-	public BlogGenerator(BlogProperties properties) {
-		this.properties = properties;
+        // add all deserialized posts to list and sort it by publishing-date
+        for (String postDirectory : postDirectories) {
+            BlogPost post = parseJSONInPost(postDirectory);
+            posts.add(post);
+        }
+        Collections.sort(posts, Collections.reverseOrder()); // sort by date
 
-		initializeTemplateEngine();
-	}
+        // renders the main blog-page template
+        injectBlogPostsIntoMainBlogTemplate(posts);
 
-	private void initializeTemplateEngine() {
-		configuration = new Configuration();
-		try {
-			configuration.setDirectoryForTemplateLoading(new File(BlogPost.TEMPLATES_PATH));
-			configuration.setObjectWrapper(new DefaultObjectWrapper());
-		} catch (IOException ioe) {
-			System.out.println("Error: Could not load template configuration.");
-		}
-	}
+        for (BlogPost post : posts) {
+            String postPath = post.getPostDirInGeneratedDir();
 
-	public void generate() {
-		try { // clean generated directory
-			FileUtils.cleanDirectory(new File(BlogPost.GENERATED_PATH));
-		} catch (IOException ioe) {
-			System.out.println("Error: could not clean the Generated-directory.");
-		}
+            File postPathFile = new File(postPath);
+            postPathFile.mkdirs();
 
-		List<BlogPost> posts = new LinkedList<BlogPost>();
-		String[] postDirectories = fetchCurrentBlogPostDirectories();
+            copyMediaDirToGeneratedPost(post);
 
-		// add all deserialized posts to list and sort it by publishing-date
-		for (String postDirectory : postDirectories) {
-			BlogPost post = parseJSONInPost(postDirectory);
-			posts.add(post);
-		}
-		Collections.sort(posts, Collections.reverseOrder()); // sort by date
+            injectBlogPostIntoBlogPostTemplate(post);
+        }
 
-		// renders the main blog-page template
-		injectBlogPostsIntoMainBlogTemplate(posts);
+        copyRemainingTemplatesToGeneratedDir();
+    }
 
-		for (BlogPost post : posts) {
-			String postPath = post.getPostDirInGeneratedDir();
+    private void copyRemainingTemplatesToGeneratedDir() {
+        try {
+            FileUtils.copyDirectory(
+                    new File(BlogPost.TEMPLATES_PATH),
+                    new File(BlogPost.GENERATED_PATH),
+                    new FileFilter() {
+                @Override
+                public boolean accept(File pathName) {
+                    String name = pathName.getName();
 
-			File postPathFile = new File(postPath);
-			postPathFile.mkdirs();			
+                    if (name.endsWith(".ftl")) {
+                        return false;
+                    }
 
-			copyMediaDirToGeneratedPost(post);
+                    return true;
+                }
+            });
+        } catch (IOException ioe) {
+            System.out.println("Error: could not copy remaining files into Generated-directory.");
+        }
+    }
 
-			injectBlogPostIntoBlogPostTemplate(post);
-		}
+    private void injectBlogPostsIntoMainBlogTemplate(List<BlogPost> posts) {
+        // create a root-map which freemarker needs
+        Map<String, List<BlogPost>> root = new HashMap<String, List<BlogPost>>();
+        root.put(KEY_POSTS, posts);
 
-		copyRemainingTemplatesToGeneratedDir();
-	}
+        try {
+            Template blogTemplate = configuration.getTemplate(KEY_MAIN_BLOG_PAGE_TEMPLATE);
 
+            Writer out = new FileWriter(
+                    new File(BlogPost.GENERATED_PATH + File.separator + BLOG_MAIN_HTML_FILENAME));
+            blogTemplate.process(root, out);
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            System.out.println("Error: could not process template for main blog-page.");
+            e.printStackTrace();
+        }
+    }
 
-	private void copyRemainingTemplatesToGeneratedDir() {
-		try {
-			FileUtils.copyDirectory(
-				new File(BlogPost.TEMPLATES_PATH), 
-				new File (BlogPost.GENERATED_PATH), 
-				new FileFilter() {
-					@Override
-					public boolean accept(File pathName) {
-						String name = pathName.getName();
+    private void injectBlogPostIntoBlogPostTemplate(BlogPost post) {
+        Map<String, BlogPost> root = new HashMap<String, BlogPost>();
+        root.put(KEY_POST, post);
 
-						if (name.endsWith(".ftl")) {
-							return false;
-						}
+        try {
+            Template blogpostTemplate = configuration.getTemplate(KEY_BLOG_POST_TEMPLATE);
 
-						return true;
-					}
-				}
-			);
-		} catch (IOException ioe) {
-			System.out.println("Error: could not copy remaining files into Generated-directory.");
-		}
-	}
+            Writer out = new FileWriter(
+                    new File(post.getPostDirInGeneratedDir()
+                    + File.separator + BlogPost.BLOG_POST_HTML_FILENAME));
+            blogpostTemplate.process(root, out);
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            System.out.println("Error: could not process template for main blog-page.");
+            e.printStackTrace();
+        }
+    }
 
+    private void copyMediaDirToGeneratedPost(BlogPost post) {
+        try {
+            FileUtils.copyDirectoryToDirectory(new File(post.getPostMediaDir()),
+                    new File(post.getPostDirInGeneratedDir()));
+        } catch (IOException ioe) {
+            System.out.println("Error: Could not copy media dir for post " + post.getIdentifier());
+        }
+    }
 
-	private void injectBlogPostsIntoMainBlogTemplate(List<BlogPost> posts) {
-		// create a root-map which freemarker needs
-		Map<String, List<BlogPost>> root = new HashMap<String, List<BlogPost>>();
-		root.put(KEY_POSTS, posts);
+    private BlogPost parseJSONInPost(String postDirectory) {
+        String postJSONPath = BlogPost.POSTS_PATH + File.separator
+                + postDirectory + File.separator
+                + BlogPostCreator.BLOG_ENTRY_FILENAME;
+        String postMarkdownPath = BlogPost.POSTS_PATH + File.separator
+                + postDirectory + File.separator
+                + BlogPostCreator.BLOG_MARKDOWN_FILENAME;
 
-		try {
-			Template blogTemplate = configuration.getTemplate(KEY_MAIN_BLOG_PAGE_TEMPLATE);
+        try {
+            String strJSON = FileUtils.readFileToString(new File(postJSONPath));
+            String strMarkdown = FileUtils.readFileToString(new File(postMarkdownPath));
 
-			Writer out = new FileWriter(
-				new File(BlogPost.GENERATED_PATH + File.separator + BLOG_MAIN_HTML_FILENAME));
-			blogTemplate.process(root, out);
-			out.flush();
-			out.close();
-		} catch (Exception e) {
-			System.out.println("Error: could not process template for main blog-page.");
-			e.printStackTrace();
-		}
-	}
+            return new BlogPost(strJSON, strMarkdown, postDirectory);
+        } catch (IOException ioe) {
+            System.out.println("Error: Failed reading JSON-File for post: \n"
+                    + postJSONPath + "or\n"
+                    + "postMarkdownPath");
+        }
 
-	private void injectBlogPostIntoBlogPostTemplate(BlogPost post) {
-		Map<String, BlogPost> root = new HashMap<String, BlogPost>();
-		root.put(KEY_POST, post);
-
-		try {
-			Template blogpostTemplate = configuration.getTemplate(KEY_BLOG_POST_TEMPLATE);
-
-			Writer out = new FileWriter(
-				new File(post.getPostDirInGeneratedDir() + 
-					File.separator + BlogPost.BLOG_POST_HTML_FILENAME));
-			blogpostTemplate.process(root, out);
-			out.flush();
-			out.close();
-		} catch (Exception e) {
-			System.out.println("Error: could not process template for main blog-page.");
-			e.printStackTrace();
-		}
-	} 
-
-
-
-	private void copyMediaDirToGeneratedPost(BlogPost post) {
-		try {
-			FileUtils.copyDirectoryToDirectory(new File(post.getPostMediaDir()), 
-												new File(post.getPostDirInGeneratedDir()));
-		} catch (IOException ioe) {
-			System.out.println("Error: Could not copy media dir for post " + post.getIdentifier());
-		}
-	}
-
-
-	private String[] fetchCurrentBlogPostDirectories() {
-		File postsDir = new File(BlogPost.POSTS_PATH);
-
-		return postsDir.list(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return dir.isDirectory() && !DS_STORE.equals(name);
-			}
-		});
-	}
-
-	private BlogPost parseJSONInPost(String postDirectory) {
-		String postJSONPath = BlogPost.POSTS_PATH + File.separator + 
-							postDirectory + File.separator +
-							BlogPostCreator.BLOG_ENTRY_FILENAME;
-		String postMarkdownPath = BlogPost.POSTS_PATH + File.separator + 
-							postDirectory + File.separator +
-							BlogPostCreator.BLOG_MARKDOWN_FILENAME;
-
-		try {
-			String strJSON = FileUtils.readFileToString(new File(postJSONPath));
-			String strMarkdown = FileUtils.readFileToString(new File(postMarkdownPath));
-
-			return new BlogPost(strJSON, strMarkdown, postDirectory);
-		} catch (IOException ioe) {
-			System.out.println("Error: Failed reading JSON-File for post: \n" + 
-									postJSONPath + "or\n" +
-									"postMarkdownPath");
-		}
-
-		return null;
-	}
-
-
-
+        return null;
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

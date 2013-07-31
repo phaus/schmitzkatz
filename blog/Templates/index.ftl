@@ -24,7 +24,7 @@
 		<link rel="stylesheet" href="stylesheets/mobile.css" media="screen and (max-width : 767px)" />
 
 		<link rel="icon" href="media/favicon.ico" type="image/x-icon">
-
+		<link rel="alternate" type="application/rss+xml" title="mactun.es &raquo; Feed" href="feed/index.xml" />
 		<link rel="apple-touch-icon-precomposed" href="media/touch-icon-iphone.png" />
 		<link rel="apple-touch-icon-precomposed" sizes="72x72" href="media/touch-icon-ipad.png" />
 		<link rel="apple-touch-icon-precomposed" sizes="114x114" href="media/touch-icon-iphone-retina.png" />

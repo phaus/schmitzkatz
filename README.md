@@ -21,17 +21,27 @@ A PC and a Java Runtime 1.6 or greater should be sufficient.
 
 If you are brave enough you can create your own blog by running
 
-	java -jar schmitzkatz-1.0-SNAPSHOT-distribution.jar -new "My first blog title"
+	java -jar schmitzkatz.jar -new "My first blog title"
 
 This will create a new directory in blog/Posts with the name my-first-blog-title. To edit the meta-data of your new post open blog_post.json inside my-first-blog-title (usually you don't need to edit anything in there). To edit the posts text open blog_post.md and fire away. When you are done Schmitzkatz's generate-command will take all templates from blog/Templates and inject your blogpost into them. Run the following command to achieve this:
 
-	java -jar schmitzkatz-1.0-SNAPSHOT-distribution.jar -generate
+	java -jar schmitzkatz.jar -generate
 
 This will create all necessary HTML inside blog/Generated. Just upload the files to your webserver and you're done!
 
 # How do I customize it?
 
 Edit the templates in blog/Templates. The syntax inside is based on Freemarker.
+
+
+<em>cat settings.properties</em>
+
+<pre>
+title=Example Blog
+url=http://example.com
+description=Just an example Blog!
+language=en
+</pre>
 
 # Disclaimer
 
